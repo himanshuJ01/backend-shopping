@@ -4,6 +4,17 @@ const shortid = require("shortid");
 const path = require("path");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
+const { AppSync } = require("aws-sdk");
+const Razorpay = require('razorpay');
+const express = require('express')
+const app = express();
+const cors = require('cors');
+
+app.use(cors());
+app.use(express.json());
+
+require('dotenv').config();
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -14,8 +25,8 @@ const storage = multer.diskStorage({
   },
 });
 
-const accessKeyId = process.env.accessKeyId;
-const secretAccessKey = process.env.secretAccessKey;
+const accessKeyId = process.env.ACCESSKEYID;
+const secretAccessKey = process.env.SERETACCESSKEY;
 
 const s3 = new aws.S3({
   accessKeyId,
@@ -27,8 +38,8 @@ exports.upload = multer({ storage });
 exports.uploadS3 = multer({
   storage: multerS3({
     s3: s3,
-    bucket: "flipkart-clone-app",
-    acl: "public-read",
+    bucket: 'filpkart-clone-app',
+    acl: 'public-read',
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -72,3 +83,30 @@ exports.superAdminMiddleware = (req, res, next) => {
   }
   next();
 };
+
+// razorpay
+const razorpay = new Razorpay({
+  key_id: 'rzp_test_XxDKZy0fvNletW',
+  key_secret: 'G1HljF1vdL5q8uLslqCqTgeP'
+})
+
+exports.PaymentMiddleware =  (req, res) => {
+  
+	const amount = 499
+	const currency = 'INR'
+  const receipt = 'receipt'
+  
+
+	
+      razorpay.orders.create({amount, currency, receipt},
+        (error, order) => {if(error){
+          return res.status(500).json(error);
+        }
+        return res.status(200).json(order);
+      }
+        
+      
+      );
+    	};
+ 
+
